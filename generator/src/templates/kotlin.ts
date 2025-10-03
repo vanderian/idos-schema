@@ -24,12 +24,12 @@ const kotlinTypeMapping: Record<string, string> = {
 };
 
 const kotlinSchemaMapping: Record<string, string> = {
-  TEXT: "DataType.Text",
-  UUID: "DataType.Uuid",
-  INT: "DataType.Int",
-  BOOLEAN: "DataType.Boolean",
-  BOOL: "DataType.Boolean",
-  INT8: "DataType.Int",
+  TEXT: "KwilTypes.text",
+  UUID: "KwilTypes.uuid",
+  INT: "KwilTypes.int",
+  BOOLEAN: "KwilTypes.bool",
+  BOOL: "KwilTypes.bool",
+  INT8: "KwilTypes.int",
 };
 
 // File writers
@@ -69,7 +69,7 @@ function writeFileHeader(file: fs.WriteStream, packageName: string, method?: Met
   const hasUuidString = allArgs.some(arg => arg.type === 'UUID');
   if (hasUuidString) {
     usedTypes.add('UuidString');
-    usedImports.add('import org.idos.kwil.rpc.UuidString');
+    usedImports.add('import org.idos.kwil.types.UuidString');
   }
   
   // Check for DataType usage in positional types
@@ -77,10 +77,10 @@ function writeFileHeader(file: fs.WriteStream, packageName: string, method?: Met
   if (hasPositionalTypes) {
     usedTypes.add('PositionalParams');
     usedTypes.add('PositionalTypes');
-    usedTypes.add('DataType');
+    usedTypes.add('KwilTypes');
     usedImports.add('import org.idos.kwil.transaction.PositionalParams');
     usedImports.add('import org.idos.kwil.transaction.PositionalTypes');
-    usedImports.add('import org.idos.kwil.serialization.DataType');
+    usedImports.add('import org.idos.kwil.serialization.KwilTypes');
   }
   
   // Add action type import
@@ -154,7 +154,7 @@ async function generateViewAction(method: any, outputDir: string) {
   const file = fs.createWriteStream(outputFile);
   
   // Write file header
-  writeFileHeader(file, 'org.idos.kwil.actions.generated.view', method);
+  writeFileHeader(file, 'org.idos.kwil.domain.generated.view', method);
   
   // Generate response class if needed
   const responseType = generateResponseClass(
@@ -199,7 +199,7 @@ async function generateViewAction(method: any, outputDir: string) {
     file.write(`    override val positionalTypes: PositionalTypes =\n`);
     file.write(`        listOf(\n`);
     method.args.forEach((arg: { name: string; type: string }) => {
-      const type = kotlinSchemaMapping[arg.type] || 'DataType.Text';
+      const type = kotlinSchemaMapping[arg.type] || 'KwilTypes.text';
       file.write(`            ${type},\n`);
     });
     file.write(`        )\n\n`);
@@ -239,7 +239,7 @@ async function generateExecuteAction(method: any, outputDir: string) {
   const file = fs.createWriteStream(outputFile);
   
   // Write file header
-  writeFileHeader(file, 'org.idos.kwil.actions.generated.execute', method);
+  writeFileHeader(file, 'org.idos.kwil.domain.generated.execute', method);
   
   // Generate parameter class
   const paramType = generateParameterClass(
