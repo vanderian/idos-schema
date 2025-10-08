@@ -24,12 +24,12 @@ const kotlinTypeMapping: Record<string, string> = {
 };
 
 const kotlinSchemaMapping: Record<string, string> = {
-  TEXT: "KwilTypes.text",
-  UUID: "KwilTypes.uuid",
-  INT: "KwilTypes.int",
-  BOOLEAN: "KwilTypes.bool",
-  BOOL: "KwilTypes.bool",
-  INT8: "KwilTypes.int",
+  TEXT: "KwilType.Text()",
+  UUID: "KwilType.Uuid()",
+  INT: "KwilType.Int()",
+  BOOLEAN: "KwilType.Bool()",
+  BOOL: "KwilType.Bool()",
+  INT8: "KwilType.Int()",
 };
 
 // File writers
@@ -77,22 +77,22 @@ function writeFileHeader(file: fs.WriteStream, packageName: string, method?: Met
   if (hasPositionalTypes) {
     usedTypes.add('PositionalParams');
     usedTypes.add('PositionalTypes');
-    usedTypes.add('KwilTypes');
-    usedImports.add('import org.idos.kwil.transaction.PositionalParams');
-    usedImports.add('import org.idos.kwil.transaction.PositionalTypes');
-    usedImports.add('import org.idos.kwil.serialization.KwilTypes');
+    usedTypes.add('KwilType');
+    usedImports.add('import org.idos.kwil.domain.PositionalParams');
+    usedImports.add('import org.idos.kwil.domain.PositionalTypes');
+    usedImports.add('import org.idos.kwil.serialization.KwilType');
   }
   
   // Add action type import
   if (packageName.endsWith('.view')) {
     const hasParams = method && method.args && method.args.length > 0;
     if (hasParams) {
-      usedImports.add('import org.idos.kwil.actions.ViewAction');
+      usedImports.add('import org.idos.kwil.domain.ViewAction');
     } else {
-      usedImports.add('import org.idos.kwil.actions.NoParamsAction');
+      usedImports.add('import org.idos.kwil.domain.NoParamsAction');
     }
   } else if (packageName.endsWith('.execute')) {
-    usedImports.add('import org.idos.kwil.actions.ExecuteAction');
+    usedImports.add('import org.idos.kwil.domain.ExecuteAction');
   }
   
   const allImports = Array.from(usedImports).sort();
@@ -276,18 +276,20 @@ async function generateExecuteAction(method: any, outputDir: string) {
   file.write(`        )\n\n`);
   
   // Generate toPositionalParams
-  file.write(`    override fun toPositionalParams(input: ${paramType || 'Unit'}): PositionalParams =\n`);
-  file.write(`        listOf(\n`);
+  file.write(`    override fun toPositionalParams(input: List<${paramType || 'Unit'}>): List<PositionalParams> =\n`);
+  file.write(`        input.map {\n`);
+  file.write(`            listOf(\n`);
   if (paramType) {
     method.args.forEach((arg: { name: string; type: string }) => {
       const fieldName = toCamelCase(arg.name);
       const isUuid = arg.type === 'UUID';
       const isOptional = method.generatorComments?.paramOptional?.includes(arg.name) || false;
       const accessor = isUuid ? (isOptional ? '?.value' : '.value') : '';
-      file.write(`            input.${fieldName}${accessor},\n`);
+      file.write(`                it.${fieldName}${accessor},\n`);
     });
   }
-  file.write(`        )\n`);
+  file.write(`            )\n`);
+  file.write(`        }\n`);
   
   file.write(`}\n`);
   
