@@ -209,10 +209,7 @@ async function generateViewAction(method: any, outputDir: string) {
     file.write(`        listOf(\n`);
     method.args.forEach((arg: { name: string; type: string }) => {
       const fieldName = toCamelCase(arg.name);
-      const isUuid = arg.type === 'UUID';
-      const isOptional = method.generatorComments?.paramOptional?.includes(arg.name) || false;
-      const accessor = isUuid ? (isOptional ? '?.value' : '.value') : '';
-      file.write(`            input.${fieldName}${accessor},\n`);
+      file.write(`            input.${fieldName},\n`);
     });
     file.write(`        )\n`);
     
@@ -282,10 +279,7 @@ async function generateExecuteAction(method: any, outputDir: string) {
   if (paramType) {
     method.args.forEach((arg: { name: string; type: string }) => {
       const fieldName = toCamelCase(arg.name);
-      const isUuid = arg.type === 'UUID';
-      const isOptional = method.generatorComments?.paramOptional?.includes(arg.name) || false;
-      const accessor = isUuid ? (isOptional ? '?.value' : '.value') : '';
-      file.write(`                it.${fieldName}${accessor},\n`);
+      file.write(`                it.${fieldName},\n`);
     });
   }
   file.write(`            )\n`);
